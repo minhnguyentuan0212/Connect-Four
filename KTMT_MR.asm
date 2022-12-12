@@ -25,7 +25,29 @@ syscall
 #
 #
 jal newGameBoard
+# Draw gameboard
 
+##### Test field
+li $a0, 10
+li $a1, 10
+li $a2, 2
+jal drawCoin
+
+li $a0, 1
+li $a1, 1
+li $a2, 1
+jal drawCoin
+
+li $a0, 28
+li $a1, 19
+li $a2, 2
+jal drawCoin
+
+li $a0, 37
+li $a1, 37
+li $a2, 1
+jal drawCoin
+#####
 Exit:
 	li $v0, 10 # terminate the program
 	syscall
@@ -234,7 +256,48 @@ drawSquare:
 	lw $s0, 8($sp)
 	addi $sp, $sp, 12
 	jr $ra
-	 
+
+# Function: drawCoin
+# Input:
+# 	$a0 = X
+#	$a1 = Y
+#	$a2 = Player Number (1 or 2)
+# Output: draw Color coin in the box which has top left (X, Y)
+drawCoin:
+	addi $a2, $a2, 1
+	addi $sp, $sp, -20
+	sw $s0, 16($sp)
+	sw $s1, 12($sp)
+	sw $a0, 8($sp)
+	sw $a1, 4($sp)
+	sw $ra, 0($sp)
+	move $s0, $a0
+	move $s1, $a1
+	addi $a0, $s0, 1
+	addi $a1, $s1, 1
+	li $a3, 6
+	jal drawSquare
+	addi $a0, $s0, 2
+	addi $a1, $s1, 0
+	li $a3, 4
+	jal drawHorizontalLine # (X+2, Y)
+	addi $a0, $s0, 2
+	addi $a1, $s1, 7
+	jal drawHorizontalLine
+	addi $a0, $s0, 0
+	addi $a1, $s1, 2
+	jal drawVerticalLine
+	addi $a0, $s0, 7
+	addi $a1, $s1, 2
+	jal drawVerticalLine
+	lw $ra, 0($sp)
+	lw $a1, 4($sp)
+	lw $a0, 8($sp)
+	lw $s1, 12($sp)
+	lw $s0, 16($sp)
+	addi $sp, $sp, 20
+	jr $ra
+
 # Funtion: drawHorizontalLine
 # Input:
 #	$a0 = X
