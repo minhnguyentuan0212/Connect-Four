@@ -262,7 +262,7 @@ drawSquare:
 # 	$a0 = X
 #	$a1 = Y
 #	$a2 = Player Number (1 or 2)
-# Output: draw Color coin in the box which has top left (X, Y)
+# Output: draw coin in the box which has top left (X, Y)
 drawCoin:
 	addi $a2, $a2, 1
 	addi $sp, $sp, -20
