@@ -69,9 +69,147 @@ newGameBoard:
 # Function: drawNumber
 # Output: draw column's number
 drawNumber:
-	li $a2, 
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	li $a2, 0
 	# Number 1
+	li $a0, 3
+	li $a1, 55
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 4
+	li $a3, 6
+	jal drawVerticalLine
+	li $a0, 3
+	li $a1, 61
+	li $a3, 3
+	jal drawHorizontalLine
+	# Number 2
+	li $a0, 11
+	li $a1, 56
+	jal drawUnit
+	li $a0, 12
+	li $a1, 55
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 14
+	li $a1, 56
+	li $a3, 2
+	jal drawVerticalLine
+	li $a0, 13
+	li $a1, 58
+	jal drawUnit
+	li $a0, 12
+	li $a1, 59
+	jal drawUnit
+	li $a0, 11
+	li $a1, 60
+	jal drawUnit
+	li $a0, 11
+	li $a1, 61
+	li $a3, 4
+	jal drawHorizontalLine
+	# Number 3 
+	li $a0, 21
+	li $a1, 56
+	jal drawUnit
+	li $a0, 22
+	li $a1, 55
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 24
+	li $a1, 56
+	li $a3, 2
+	jal drawVerticalLine
+	li $a0, 23
+	li $a1, 58
+	jal drawUnit
+	li $a0, 24
+	li $a1, 59
+	li $a3, 2
+	jal drawVerticalLine
+	li $a0, 21
+	li $a1, 60
+	jal drawUnit
+	li $a0, 22
+	li $a1, 61
+	li $a3, 2
+	jal drawHorizontalLine
+	# Number 4
+	li $a0, 30
+	li $a1, 55
+	li $a3, 4
+	jal drawVerticalLine
+	li $a0, 31
+	li $a1, 58
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 33
+	li $a1, 55
+	li $a3, 7
+	jal drawVerticalLine
+	# Number 5
+	li $a0, 39
+	li $a1, 55
+	li $a3, 4
+	jal drawHorizontalLine
+	li $a0, 39
+	li $a1, 56
+	li $a3, 2
+	jal drawVerticalLine
+	li $a0, 40
+	li $a1, 58
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 42
+	li $a1, 59
+	li $a3, 2
+	jal drawVerticalLine
+	li $a0, 39
+	li $a1, 61
+	li $a3, 3
+	jal drawHorizontalLine
+	# Number 6
+	li $a0, 48
+	li $a1, 56
+	li $a3, 5
+	jal drawVerticalLine
+	li $a0, 49
+	li $a1, 55
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 51
+	li $a1, 56
+	jal drawUnit
+	li $a0, 49
+	li $a1, 58
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 49
+	li $a1, 61
+	li $a3, 2
+	jal drawHorizontalLine
+	li $a0, 51
+	li $a1, 59
+	li $a3, 2
+	jal drawVerticalLine
+	# Number 7
+	li $a0, 57
+	li $a1, 55
+	li $a3, 4
+	jal drawHorizontalLine
+	li $a0, 60
+	li $a1, 56
+	li $a3, 2
+	jal drawVerticalLine
+	li $a0, 59
+	li $a1, 58
+	li $a3, 4
+	jal drawVerticalLine
 
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
 
 # Function: drawSquare
 # Input: 
