@@ -3,11 +3,13 @@
 .data
 Colors:
 	.word 0xFFFFFF # 0 White	Square
-	.word 0x0000FF # 1 Blue	    Background
+	.word 0x000000 # 1 Black	Background
 	.word 0x00FF00 # 2 Green	Player 1's circle
 	.word 0xFF0000 # 3 Red		Player 2's circle
-
-
+#Array: Present the gameboard's state, 0: empty, 1: Player 1, 2: Player 2
+#Array[0:6] = Column 1
+#Array[6:12] = Column 2...
+Array: .byte 0:42
 prompt_welcome: .asciiz "Welcome to Connect 4!\n\n"
 prompt_turn_one: .asciiz "\n> Player 1's turn: "
 prompt_turn_two: .asciiz "\n> Player 2's turn: "
