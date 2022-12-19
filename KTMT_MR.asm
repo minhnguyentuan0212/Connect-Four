@@ -27,28 +27,11 @@ syscall
 #
 #
 jal newGameBoard
+jal gamePlay
 # Draw gameboard
 
-##### Test field
-li $a0, 10
-li $a1, 10
-li $a2, 2
-jal drawCoin
+#####TEST FIELD
 
-li $a0, 1
-li $a1, 1
-li $a2, 1
-jal drawCoin
-
-li $a0, 28
-li $a1, 19
-li $a2, 2
-jal drawCoin
-
-li $a0, 37
-li $a1, 37
-li $a2, 1
-jal drawCoin
 #####
 Exit:
 	li $v0, 10 # terminate the program
@@ -60,6 +43,12 @@ Exit:
 newGameBoard:
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
+	#Saved data variables
+	li $s0, 0     	#s0 = number of coins
+	la $s1, Array 	#s1 = array of game status
+	li $s2, 0	 	#s2 = last inserted index
+	li $s3, 0 		#type of win for checking
+
 	# Background
 	li $a0, 0 # X = 0
 	li $a1, 0 # Y = 0
@@ -292,6 +281,8 @@ drawCoin:
 	addi $a0, $s0, 7
 	addi $a1, $s1, 2
 	jal drawVerticalLine
+	
+			
 	lw $ra, 0($sp)
 	lw $a1, 4($sp)
 	lw $a0, 8($sp)
@@ -389,10 +380,344 @@ drawUnit:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	jr $ra
+
+#Function: checkInput
+#Input: integer i from keyboard, $a0 = i
+#Output: $a0 = X, $a1 = Y with (X,Y) 
+checkInput:
+	#############
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	#condition 1 ( 1 <= i <= 7)
+	slti $t0, $a0, 8 	# if (i < 8)
+	slti $t1, $a0, 1 	# if (i < 1)
+	not $t1, $t1 	# if (i>=1)
+	and $t0, $t0, $t1	
+	beqz $t0, choose_another
+	#condition 2 ( array[6(i-1)+5]  <> 0 )	
+	addi $t0, $a0, -1
+	li $t1, 6
+	mult $t0, $t1
+	mflo $t0
+	addi $t0, $t0, 5 	# t0 = 6(i-1) + 5
+	add $t0, $t0, $s1 	# t0 = &array
+	lbu $t1, 0($t0)
+	slti $t0, $t1, 1	 # t0 = 1 if array[6(i-1) + 5] == 0 
+	beqz $t0, choose_another
+	#loop 6(i-1), 6i -5, ... 6i -1
+	li $t1, 6
+	addi $t0, $a0, -1
+	mult $t0, $t1
+	mflo $t0
+	add $t0, $t0, $s1 
+	Loop:
+		lbu $t2, 0($t0)
+		slti $t2, $t2, 1
+		bnez $t2, breakLoop
+		addi $t0, $t0, 1
+		addi $t1, $t1, -1
+		bnez $t1, Loop
+	breakLoop:
+	sb $a2, 0($t0)
+	sub  $t0, $t0, $s1
+	addi $s2, $t0, 0	# update $s2 = i
+	li $t1, 6
+	# x = (t div 6)*9 + 1
+	# y = (5 - (t mod 6))*9 + 1
+	div $t0, $t1 
+	mfhi $t1 		#t mod 6
+	mflo $t0 		#t div 6
+	
+	li $t2, 9
+	mult $t0, $t2
+	mflo $t0
+	addi $a0, $t0, 1	#(t div 6)*9+1
+	
+	li $t0, 5
+	sub $t0, $t0, $t1
+	mult $t0, $t2
+	mflo $t0
+	addi $a1, $t0, 1	#(5 - (t mod 6))*9 +1
+	##################
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
+#Funtion: checkWin
+checkWin:
+	addi $sp, $sp, -8
+	sw $a0, 0($sp)
+	sw $ra, 4($sp)
+	### Horizontal Check
+	 #cau nay` lon left voi right nma luoi` sua qua :))
+	add $t1, $s1, $s2	#t1 = &array[i]
+	lbu $t2, 0($t1) 	#t2 = array[i]
+	li $t3, 3		#t3 = count
+	li $t4, 0 		#t4 = offset for left
+	li $t5, 0		#t5 = offset for right
+	leftCheck:
+		addi $t4, $t4, 6		#t4 = t4 + 6
+		add $t0, $s2, $t4		#t0 = i + t4
+		slti $t6, $t0, 42
+		beqz $t6, rightCheck		#check if t0 > 42
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, rightCheck	#check if array[t0] == array[i]
+		addi $t3, $t3, -1
+		beqz $t3, announceWin1	#win
+		j leftCheck		#loop	
+	rightCheck:
+		addi $t5, $t5, -6		#t5 = t5 - 6
+		add $t0, $s2, $t5		#t0 = i + t5
+		slti $t6, $t0, 0
+		bnez  $t6, noHorizontalWin	#check if t0  < 0
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, noHorizontalWin	#check if array[t0] == array[i]
+		add $t3, $t3, -1
+		beqz $t3, announceWin1	#win
+		j rightCheck		#loop
+	noHorizontalWin:
+	### Vertical Check
+	add $t1, $s1, $s2	#t1 = &array[i]
+	lbu $t2, 0($t1) 	#t2 = array[i]
+	li $t3, 3		#t3 = count
+	li $t4, 0 		#t4 = offset for up
+	li $t5, 0		#t5 = offset for down
+	li $t0, 6		#t0 = 6
+	div $s2, $t0	
+	mflo $t8		#t8 = i mod 6
+	mult $t8, $t0	
+	mfhi $t8		#t8 = i-th column * 6
+	addi $t9, $t8, 6	#t9 = i+1-th column *6		
+	upCheck:
+		addi $t4, $t4, 1
+		add $t0, $s2, $t4
+		slt $t6, $t0, $t9
+		beqz $t6, downCheck
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, downCheck
+		addi $t3, $t3, -1
+		beqz $t3, announceWin2
+		j upCheck
+	downCheck:
+		addi $t5, $t5, -1
+		add $t0, $s2, $t5
+		slt $t6, $t0, $t8
+		bnez  $t6, noVerticalWin
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, noVerticalWin
+		add $t3, $t3, -1
+		beqz $t3, announceWin2
+		j downCheck
+	noVerticalWin:
+	### Left Diagonal Check
+	add $t1, $s1, $s2	#t1 = &array[i]
+	lbu $t2, 0($t1) 	#t2 = array[i]
+	li $t3, 3		#t3 = count
+	li $t4, 0 		#t4 = offset for up-left
+	li $t5, 0		#t5 = offset for down-right
+	li $t8, 6
+	down_rightCheck:
+		addi $t4, $t4, 5 
+		add $t0, $s2, $t4
+		slti $t6, $t0, 42
+		beqz $t6, up_leftCheck	#check if t0 < 42
+		addi $t9, $t0, 1
+		div $t9, $t8
+		mfhi $t9
+		beqz $t9, up_leftCheck 	#check if (t0 + 1) mod 6 == 0
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, up_leftCheck	#check if array[t0] == array[i]
+		addi $t3, $t3, -1
+		beqz $t3, announceWin3	
+		j down_rightCheck		
+	up_leftCheck:
+		addi $t5, $t5, -5
+		add $t0, $s2, $t5
+		slti $t6, $t0, 0
+		bnez $t6, noLeftDiagonalWin	#check if t0 < 0
+		addi $t9, $t0, 0
+		div $t9, $t8
+		mfhi $t9
+		beqz $t9, noLeftDiagonalWin	#chekc if t0 mod 6 == 0 
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, noLeftDiagonalWin #check if array[t0] == array[i]	
+		addi $t3, $t3, -1
+		beqz $t3, announceWin3
+		j up_leftCheck
+	noLeftDiagonalWin:
+	### Right Diagonal Check
+	add $t1, $s1, $s2	#t1 = &array[i]
+	lbu $t2, 0($t1) 	#t2 = array[i]
+	li $t3, 3		#t3 = count
+	li $t4, 0 		#t4 = offset for down-left
+	li $t5, 0		#t5 = offset for up-right
+	li $t8, 6
+	up_rightCheck:
+		addi $t4, $t4, 7
+		add $t0, $s2, $t4
+		slti $t6, $t0, 42
+		beqz $t6, down_leftCheck
+		addi $t9, $t0, 0
+		div $t9, $t8
+		mfhi $t9
+		beqz $t9, down_leftCheck
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, down_leftCheck
+		addi $t3, $t3, -1
+		beqz $t3, announceWin4
+		j up_rightCheck
+	down_leftCheck:
+		addi $t5, $t5, -7
+		add $t0, $s2, $t5
+		slti $t6, $t0, 0
+		bnez $t6, noRightDiagonalWin
+		addi $t9, $t0, 1
+		div $t9, $t8
+		mfhi $t9
+		beqz $t9, noRightDiagonalWin
+		add $t0, $t0, $s1
+		lbu $t7, 0($t0)
+		bne $t2, $t7, noRightDiagonalWin
+		addi $t3, $t3, -1
+		beqz $t3, announceWin4
+		j down_leftCheck
+	noRightDiagonalWin:
+	##
+	lw $ra, 4($sp)
+	lw $a0, 0($sp)
+	addi $sp, $sp, 8
+	jr $ra
+	
+#Function: announceWin(1, 2, 3, 4) for each type of win
+announceWin1:
+	li $s3, 1
+	j announceWin
+announceWin2:
+	li $s3, 2
+	j announceWin
+announceWin3:
+	li $s3, 3
+	j announceWin
+announceWin4:
+	li $s3, 4
+	j announceWin
+announceWin:
+	li $t0, 2
+	bne $a2, $t0, player_2win
+	li $v0, 4
+	la $a0, prompt_win_one
+	syscall
+	j Exit
+player_2win:
+	li $v0, 4
+	la $a0, prompt_win_two
+	syscall
+	j Exit
+#Function: checkTie: if ($s0 == 42) print("Tie")
+checkTie:
+	addi $sp, $sp, -8
+	sw $a0, 0($sp)
+	sw $ra, 4($sp)
+	slti $t0, $s0, 42
+	bnez $t0, continue
+	la $a0, prompt_draw
+	li $v0, 4
+	syscall
+	j Exit
+continue:
+	lw $ra, 4($sp)
+	lw $a0, 0($sp)
+	addi $sp , $sp, 8
+	jr $ra
+	
+#Function: gamePlay
+gamePlay:
+	jal player1		#start with player 1
+player1:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	##########
+	jal print_player1_turn
+	li $v0, 5
+	syscall
+	li $a2, 1 		#set color for player1
+	move $a0, $v0 
+	jal checkInput
+	jal drawCoin	#change $a2 += 1  after this
+	addi $s0, $s0, 1	#update number of coins
+	jal checkWin
+	jal checkTie
+	##############
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	##############
+	jal player2
+player2:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	#############
+	jal print_player2_turn
+	li $v0, 5
+	syscall 
+	li $a2, 2		#set color for player2
+	move $a0, $v0 
+	jal checkInput
+	jal drawCoin 	#change $a2 += 1 after this
+	addi $s0, $s0, 1	#update number of coins
+	jal checkWin
+	jal checkTie
+	##
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jal player1
+	j player1
 	
 	
-	
-	
-	
-	
-	
+
+#Function: choose_another: print "Choose another.." and back to player's turn 
+choose_another: 
+	jal print_choose_another
+	addi $sp, $sp, 4 #skip $ra of checkInput
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
+#Function: Print_xx (print without changing $a0)
+print_choose_another:
+	addi $sp, $sp, -8
+	sw $a0, 0($sp)
+	sw $ra, 4($sp)
+	li $v0, 4
+	la $a0, prompt_full
+	syscall
+	lw $ra, 4($sp)
+	lw $a0, 0($sp)
+	addi $sp , $sp, 8
+	jr $ra
+print_player1_turn:
+	addi $sp, $sp, -8
+	sw $a0, 0($sp)
+	sw $ra, 4($sp)
+	li $v0, 4
+	la $a0, prompt_turn_one
+	syscall
+	lw $ra, 4($sp)
+	lw $a0, 0($sp)
+	addi $sp , $sp, 8
+	jr $ra
+print_player2_turn:
+	addi $sp, $sp, -8
+	sw $a0, 0($sp)
+	sw $ra, 4($sp)
+	li $v0, 4
+	la $a0, prompt_turn_two
+	syscall
+	lw $ra, 4($sp)
+	lw $a0, 0($sp)
+	addi $sp , $sp, 8
+	jr $ra
